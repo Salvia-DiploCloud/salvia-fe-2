@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -9,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Logo } from "@/components/logo"
 import { confirmSignUp } from "@/lib/cognito"
 
-export default function ConfirmPage() {
+function ConfirmForm() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const initialEmail = searchParams.get("email") ?? ""
@@ -43,6 +44,53 @@ export default function ConfirmPage() {
   }
 
   return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="confirmEmail">Email</Label>
+        <Input
+          id="confirmEmail"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className="h-11"
+          required
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="code">Verification code</Label>
+        <Input
+          id="code"
+          type="text"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          placeholder="Enter the 6-digit code"
+          className="h-11"
+          required
+        />
+      </div>
+
+      {error && (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      )}
+      {success && (
+        <p className="text-sm text-emerald-600" role="status">
+          {success}
+        </p>
+      )}
+
+      <Button type="submit" size="lg" className="w-full h-11 text-base" disabled={isSubmitting}>
+        {isSubmitting ? "Confirming..." : "Confirm email"}
+      </Button>
+    </form>
+  )
+}
+
+export default function ConfirmPage() {
+  return (
     <div className="flex min-h-screen items-center justify-center px-4 py-12">
       <main className="w-full max-w-md">
         <Card className="rounded-2xl shadow-lg border-border/60">
@@ -60,52 +108,12 @@ export default function ConfirmPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="confirmEmail">Email</Label>
-                <Input
-                  id="confirmEmail"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="h-11"
-                  required
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="code">Verification code</Label>
-                <Input
-                  id="code"
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="Enter the 6-digit code"
-                  className="h-11"
-                  required
-                />
-              </div>
-
-              {error && (
-                <p className="text-sm text-destructive" role="alert">
-                  {error}
-                </p>
-              )}
-              {success && (
-                <p className="text-sm text-emerald-600" role="status">
-                  {success}
-                </p>
-              )}
-
-              <Button type="submit" size="lg" className="w-full h-11 text-base" disabled={isSubmitting}>
-                {isSubmitting ? "Confirming..." : "Confirm email"}
-              </Button>
-            </form>
+            <Suspense fallback={<div className="text-center text-muted-foreground">Loading...</div>}>
+              <ConfirmForm />
+            </Suspense>
           </CardContent>
         </Card>
       </main>
     </div>
   )
 }
-

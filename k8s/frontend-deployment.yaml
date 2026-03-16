@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: salvia-frontend
+  labels:
+    app: salvia-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: salvia-frontend
+  template:
+    metadata:
+      labels:
+        app: salvia-frontend
+    spec:
+      containers:
+        - name: salvia-frontend
+          image: "841315966396.dkr.ecr.us-east-1.amazonaws.com/salvia-frontend:latest"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          env:
+            - name: NEXT_PUBLIC_API_BASE_URL
+              value: "https://cvlhkbu6ug.execute-api.us-east-1.amazonaws.com/dev"
+            - name: NEXT_PUBLIC_COGNITO_USER_POOL_ID
+              value: "us-east-1_15vFB45j4"
+            - name: NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID
+              value: "4dekf31epl7lldimlhgf081h23"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: salvia-frontend
+  labels:
+    app: salvia-frontend
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
+      name: http
+  selector:
+    app: salvia-frontend
+

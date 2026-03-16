@@ -5,19 +5,23 @@ import {
   CognitoUserPool,
 } from "amazon-cognito-identity-js"
 
-const poolData = {
-  UserPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID ?? "",
-  ClientId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID ?? "",
-}
+let _userPool: CognitoUserPool | null = null
 
-if (!poolData.UserPoolId || !poolData.ClientId) {
-  // eslint-disable-next-line no-console
-  console.warn(
-    "[Cognito] NEXT_PUBLIC_COGNITO_USER_POOL_ID o NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID no están configurados.",
-  )
+function getUserPool(): CognitoUserPool {
+  if (!_userPool) {
+    const poolData = {
+      UserPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID ?? "",
+      ClientId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID ?? "",
+    }
+    if (!poolData.UserPoolId || !poolData.ClientId) {
+      throw new Error(
+        "[Cognito] NEXT_PUBLIC_COGNITO_USER_POOL_ID and NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID are required.",
+      )
+    }
+    _userPool = new CognitoUserPool(poolData)
+  }
+  return _userPool
 }
-
-const userPool = new CognitoUserPool(poolData)
 
 export type SignUpParams = {
   email: string
@@ -31,7 +35,7 @@ export async function signUpUser({ email, password, attributes = {} }: SignUpPar
   )
 
   return new Promise((resolve, reject) => {
-    userPool.signUp(email, password, attributeList, [], (err, result) => {
+    getUserPool().signUp(email, password, attributeList, [], (err, result) => {
       if (err) {
         reject(err)
         return
@@ -44,7 +48,7 @@ export async function signUpUser({ email, password, attributes = {} }: SignUpPar
 export async function signInUser(email: string, password: string) {
   const user = new CognitoUser({
     Username: email,
-    Pool: userPool,
+    Pool: getUserPool(),
   })
 
   const authDetails = new AuthenticationDetails({
@@ -67,7 +71,7 @@ export async function signInUser(email: string, password: string) {
 export async function confirmSignUp(email: string, code: string) {
   const user = new CognitoUser({
     Username: email,
-    Pool: userPool,
+    Pool: getUserPool(),
   })
 
   return new Promise((resolve, reject) => {
@@ -88,7 +92,7 @@ export type CognitoUserProfile = {
 }
 
 export async function getCurrentUserProfile(): Promise<CognitoUserProfile | null> {
-  const user = userPool.getCurrentUser()
+  const user = getUserPool().getCurrentUser()
   if (!user) return null
 
   return new Promise((resolve, reject) => {
@@ -124,7 +128,7 @@ export async function getCurrentUserProfile(): Promise<CognitoUserProfile | null
 }
 
 export async function updateCurrentUserAttributes(attributes: Record<string, string>) {
-  const user = userPool.getCurrentUser()
+  const user = getUserPool().getCurrentUser()
   if (!user) {
     throw new Error("No authenticated user.")
   }
@@ -152,7 +156,7 @@ export async function updateCurrentUserAttributes(attributes: Record<string, str
 }
 
 export function signOutUser() {
-  const user = userPool.getCurrentUser()
+  const user = getUserPool().getCurrentUser()
   if (user) {
     user.signOut()
   }

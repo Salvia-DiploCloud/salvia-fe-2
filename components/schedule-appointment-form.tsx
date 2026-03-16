@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { createTicket, Ticket } from "@/lib/api"
 export type { TicketPayload } from "@/lib/api"
@@ -40,18 +41,21 @@ export type ScheduleAppointmentFormProps = {
 
 const ticketCategories = [
   { value: "MEDICAL_REQUEST", label: "Medical Request" },
-  { value: "PHARMACY", label: "Pharmacy" },
-  { value: "BILLING", label: "Billing" },
-  { value: "OTHER", label: "Other" },
+  { value: "APPOINTMENT", label: "Appointment" },
+  { value: "ADMINISTRATIVE", label: "Administrative" },
+  { value: "INCIDENT", label: "Incident" },
+  { value: "GENERAL", label: "General" },
 ]
 
 const ticketPriorities = [
   { value: "LOW", label: "Low" },
   { value: "MEDIUM", label: "Medium" },
   { value: "HIGH", label: "High" },
+  { value: "CRITICAL", label: "Critical" },
 ]
 
 export function ScheduleAppointmentForm({ onTicketCreated }: ScheduleAppointmentFormProps) {
+  const router = useRouter()
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [category, setCategory] = useState("")
@@ -65,7 +69,9 @@ export function ScheduleAppointmentForm({ onTicketCreated }: ScheduleAppointment
     const errs: Errors = {}
 
     if (!title.trim()) errs.title = "Please provide a title for the ticket"
+    else if (title.trim().length < 5) errs.title = "Title must be at least 5 characters"
     if (!description.trim()) errs.description = "Please provide a description"
+    else if (description.trim().length < 10) errs.description = "Description must be at least 10 characters"
     if (!category) errs.category = "Please select a category"
     if (!priority) errs.priority = "Please select a priority"
 
@@ -94,7 +100,13 @@ export function ScheduleAppointmentForm({ onTicketCreated }: ScheduleAppointment
 
         setShowSuccess(true)
       } catch (error) {
-        setErrors((prev) => ({ ...prev, form: (error as Error).message }))
+        const msg = (error as Error).message
+        if (msg.includes("401") || msg.toLowerCase().includes("unauthorized")) {
+          setErrors((prev) => ({ ...prev, form: "Please log in to create a ticket." }))
+          router.push("/")
+        } else {
+          setErrors((prev) => ({ ...prev, form: msg }))
+        }
       } finally {
         setIsSubmitting(false)
       }
@@ -306,7 +318,7 @@ export function ScheduleAppointmentForm({ onTicketCreated }: ScheduleAppointment
               </div>
             )}
           </div>
-          <DialogFooter className="mt-4">
+          <DialogFooter className="mt-4 flex-col gap-3 sm:flex-col">
             <Button
               className="w-full rounded-xl"
               onClick={handleReset}
@@ -316,7 +328,10 @@ export function ScheduleAppointmentForm({ onTicketCreated }: ScheduleAppointment
             <Button
               variant="outline"
               className="w-full rounded-xl"
-              onClick={() => setShowSuccess(false)}
+              onClick={() => {
+                setShowSuccess(false)
+                router.push("/dashboard")
+              }}
             >
               Back to Dashboard
             </Button>

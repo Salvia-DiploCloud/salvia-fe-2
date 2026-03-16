@@ -6,10 +6,10 @@ export default function AppointmentsPage() {
       {/* Header */}
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">
-          Schedule Appointment
+          Create Ticket
         </h1>
         <p className="text-sm text-muted-foreground">
-          Select a specialty, doctor, date and time to book your appointment.
+          Fill in the ticket details and submit your request to the backend.
         </p>
       </div>
 

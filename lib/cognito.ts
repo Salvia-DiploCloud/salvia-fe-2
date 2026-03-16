@@ -9,16 +9,14 @@ let _userPool: CognitoUserPool | null = null
 
 function getUserPool(): CognitoUserPool {
   if (!_userPool) {
-    const poolData = {
-      UserPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID ?? "",
-      ClientId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID ?? "",
-    }
-    if (!poolData.UserPoolId || !poolData.ClientId) {
+    const poolId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID
+    const clientId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID
+    if (!poolId || !clientId) {
       throw new Error(
         "[Cognito] NEXT_PUBLIC_COGNITO_USER_POOL_ID and NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID are required.",
       )
     }
-    _userPool = new CognitoUserPool(poolData)
+    _userPool = new CognitoUserPool({ UserPoolId: poolId, ClientId: clientId })
   }
   return _userPool
 }
@@ -123,6 +121,24 @@ export async function getCurrentUserProfile(): Promise<CognitoUserProfile | null
 
         resolve(result)
       })
+    })
+  })
+}
+
+export async function getCurrentUserToken(): Promise<string | null> {
+  const user = getUserPool().getCurrentUser()
+  if (!user) return null
+
+  return new Promise((resolve, reject) => {
+    user.getSession((err, session) => {
+      if (err) {
+        reject(err)
+        return
+      }
+
+      const idToken = session?.getIdToken()?.getJwtToken()
+      const accessToken = session?.getAccessToken()?.getJwtToken()
+      resolve(idToken ?? accessToken ?? null)
     })
   })
 }

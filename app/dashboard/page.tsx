@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { DashboardSummaryCards } from "@/components/dashboard-summary-cards"
-import { DashboardNextAppointment } from "@/components/dashboard-next-appointment"
 import { DashboardLatestTickets } from "@/components/dashboard-latest-tickets"
 import { getCurrentUserProfile } from "@/lib/cognito"
 
@@ -37,8 +36,7 @@ export default function DashboardPage() {
       <DashboardSummaryCards />
 
       {/* Detail sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <DashboardNextAppointment />
+      <div className="grid grid-cols-1 gap-6">
         <DashboardLatestTickets />
       </div>
     </div>

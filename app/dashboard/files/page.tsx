@@ -160,68 +160,8 @@ export default function FilesPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <Card className="rounded-2xl border-border/60 shadow-sm lg:col-span-2">
-          <CardHeader className="flex-row items-center justify-between pb-4">
-            <CardTitle className="text-base font-semibold text-foreground">
-              Uploaded files
-            </CardTitle>
-            <Badge variant="secondary" className="rounded-full">
-              {files.length}
-            </Badge>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            {loading && (
-              <div className="text-sm text-muted-foreground">Loading…</div>
-            )}
-            {!loading && files.length === 0 && (
-              <div className="text-sm text-muted-foreground">
-                No files yet. Upload a PDF to see it here.
-              </div>
-            )}
-
-            {files.map((f) => {
-              const isSelected = f.id === selectedId
-              return (
-                <button
-                  key={f.id}
-                  type="button"
-                  onClick={() => setSelectedId(f.id)}
-                  className={[
-                    "text-left flex flex-col gap-1 rounded-xl border p-4 transition-colors",
-                    isSelected
-                      ? "border-primary/30 bg-primary/5"
-                      : "border-border hover:bg-accent/30",
-                  ].join(" ")}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium text-foreground truncate">{f.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatBytes(f.size)} · {new Date(f.createdAt).toLocaleString()}
-                      </div>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive"
-                      disabled={busyId === f.id}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onDelete(f.id)
-                      }}
-                    >
-                      {busyId === f.id ? "Deleting…" : "Delete"}
-                    </Button>
-                  </div>
-                </button>
-              )
-            })}
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-border/60 shadow-sm lg:col-span-3">
+      <div className="grid grid-cols-1 gap-6">
+        <Card className="rounded-2xl border-border/60 shadow-sm">
           <CardHeader className="pb-4">
             <CardTitle className="text-base font-semibold text-foreground">
               Preview

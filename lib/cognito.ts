@@ -123,6 +123,23 @@ export async function getCurrentUserProfile(): Promise<CognitoUserProfile | null
   })
 }
 
+export async function getCurrentUserToken(): Promise<string | null> {
+  const user = userPool.getCurrentUser()
+  if (!user) return null
+
+  return new Promise((resolve, reject) => {
+    user.getSession((err, session) => {
+      if (err) {
+        reject(err)
+        return
+      }
+
+      const token = session?.getAccessToken()?.getJwtToken() ?? null
+      resolve(token)
+    })
+  })
+}
+
 export async function updateCurrentUserAttributes(attributes: Record<string, string>) {
   const user = userPool.getCurrentUser()
   if (!user) {

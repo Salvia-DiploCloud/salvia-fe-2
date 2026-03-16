@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { getCurrentUserToken } from "@/lib/cognito"
+import { createTicket, Ticket } from "@/lib/api"
+export type { TicketPayload } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -31,18 +32,6 @@ type Errors = {
   category?: string
   priority?: string
   form?: string
-}
-
-export type TicketPayload = {
-  title: string
-  description: string
-  category: string
-  priority: string
-}
-
-export type Ticket = TicketPayload & {
-  id: string
-  createdAt: string
 }
 
 export type ScheduleAppointmentFormProps = {
@@ -92,35 +81,13 @@ export function ScheduleAppointmentForm({ onTicketCreated }: ScheduleAppointment
       setIsSubmitting(true)
 
       try {
-        const token = await getCurrentUserToken()
-        if (!token) throw new Error("No authentication token found. Please sign in again.")
-
-        // Debug: log token so the browser network tab shows it is retrieved
-        // (remove this once you confirm it is present in request headers)
-        // eslint-disable-next-line no-console
-        console.debug("Cognito token:", token)
-
-        const response = await fetch(`/api/tickets`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            title: title.trim(),
-            description: description.trim(),
-            category,
-            priority,
-          }),
+        const createdTicket = await createTicket({
+          title: title.trim(),
+          description: description.trim(),
+          category,
+          priority,
         })
 
-        if (!response.ok) {
-          const error = await response.json().catch(() => null)
-          throw new Error(error?.message || "Failed to create ticket")
-        }
-
-        const data = await response.json().catch(() => null)
-        const createdTicket = data?.ticket as Ticket | undefined
         if (createdTicket && onTicketCreated) {
           onTicketCreated(createdTicket)
         }

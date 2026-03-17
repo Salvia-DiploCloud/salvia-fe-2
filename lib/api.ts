@@ -1,4 +1,5 @@
 import { getCurrentUserToken } from "./cognito"
+import { config } from "./config"
 
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY
 
@@ -8,8 +9,7 @@ function getTicketsUrl(path: string): string {
     const p = path.replace(/^\/?v1\//, "")
     return `/api/${p}`
   }
-  const base = process.env.TICKETS_BACKEND_URL ?? ""
-  if (!base) throw new Error("Missing TICKETS_BACKEND_URL")
+  const base = config.ticketsBackendUrl
   return `${base.replace(/\/+$/, "")}${path.startsWith("/") ? path : `/${path}`}`
 }
 

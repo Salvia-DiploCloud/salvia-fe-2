@@ -4,23 +4,14 @@ import {
   CognitoUserAttribute,
   CognitoUserPool,
 } from "amazon-cognito-identity-js"
+import { config } from "./config"
 
 let userPool: CognitoUserPool | null = null
 
 function getUserPool(): CognitoUserPool {
   if (userPool) return userPool
-  const poolId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID
-  const clientId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID
-  if (!poolId || !clientId) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      "[Cognito] NEXT_PUBLIC_COGNITO_USER_POOL_ID o NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID no están configurados.",
-    )
-    throw new Error(
-      "Cognito no está configurado. Crea un archivo .env.local con NEXT_PUBLIC_COGNITO_USER_POOL_ID y NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID.",
-    )
-  }
-  userPool = new CognitoUserPool({ UserPoolId: poolId, ClientId: clientId })
+  const { userPoolId, clientId } = config.cognito
+  userPool = new CognitoUserPool({ UserPoolId: userPoolId, ClientId: clientId })
   return userPool
 }
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { config } from "@/lib/config"
 
 export async function GET(
   request: Request,
@@ -6,10 +7,7 @@ export async function GET(
 ) {
   try {
     const { ticketId } = await params
-    const baseUrl = process.env.MEDICAL_FILES_BACKEND_URL
-    if (!baseUrl) {
-      return NextResponse.json([])
-    }
+    const baseUrl = config.medicalFilesBackendUrl
 
     const url = `${baseUrl.replace(/\/+$/, "")}/files/ticket/${ticketId}`
     const headers: Record<string, string> = {}

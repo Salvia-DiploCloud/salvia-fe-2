@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { config } from "@/lib/config"
 
 function getSubFromJwt(token: string): string | null {
   try {
@@ -23,7 +24,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ message: "No file uploaded" }, { status: 400 })
     }
 
-    const baseUrl = process.env.MEDICAL_FILES_BACKEND_URL
+    const baseUrl = config.medicalFilesBackendUrl
     if (baseUrl) {
       const uploadUrl = `${baseUrl.replace(/\/+$/, "")}/upload/${ticketId}`
       const headers: Record<string, string> = {}

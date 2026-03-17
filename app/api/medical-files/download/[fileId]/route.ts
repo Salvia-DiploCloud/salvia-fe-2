@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { config } from "@/lib/config"
 
 export async function GET(
   request: Request,
@@ -6,10 +7,7 @@ export async function GET(
 ) {
   try {
     const { fileId } = await params
-    const baseUrl = process.env.MEDICAL_FILES_BACKEND_URL
-    if (!baseUrl) {
-      return NextResponse.json({ message: "Medical files backend not configured" }, { status: 503 })
-    }
+    const baseUrl = config.medicalFilesBackendUrl
 
     const encodedId = encodeURIComponent(fileId)
     const url = `${baseUrl.replace(/\/+$/, "")}/files/download/${encodedId}`

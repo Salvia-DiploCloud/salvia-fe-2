@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { config } from "@/lib/config"
 
 /**
  * Ticket payload posted from the frontend.
@@ -25,63 +26,51 @@ export type Ticket = TicketPayload & {
  * external API, or any other persistence layer.
  */
 async function saveTicket(ticket: TicketPayload, token?: string): Promise<Ticket> {
-  const baseUrl = process.env.TICKETS_BACKEND_URL || process.env.NEXT_PUBLIC_API_BASE_URL || process.env.TICKET_SERVICE_URL
-  const apiUrl = baseUrl ? `${baseUrl.replace(/\/+$/, "")}/v1/tickets` : null
+  const baseUrl = config.ticketsBackendUrl
+  const apiUrl = `${baseUrl.replace(/\/+$/, "")}/v1/tickets`
 
-  if (apiUrl) {
-    console.log("[api/tickets] Forwarding to:", apiUrl)
-    const headers: Record<string, string> = { "Content-Type": "application/json" }
-    if (token) {
-      headers.Authorization = token
-    }
+  console.log("[api/tickets] Forwarding to:", apiUrl)
+  const headers: Record<string, string> = { "Content-Type": "application/json" }
+  if (token) {
+    headers.Authorization = token
+  }
 
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 60000)
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 60000)
 
-    let resp: Response
-    try {
-      resp = await fetch(apiUrl, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(ticket),
-        signal: controller.signal,
-      })
-    } catch (fetchErr) {
-      clearTimeout(timeoutId)
-      const isTimeout = (fetchErr as Error).name === "AbortError"
-      console.error("[api/tickets] Fetch failed:", apiUrl, isTimeout ? "TIMEOUT" : (fetchErr as Error).message)
-      const err = new Error(isTimeout ? "Backend timeout (60s). Check if ALB is reachable from this server." : (fetchErr as Error).message) as Error & { status?: number }
-      err.status = 504
-      throw err
-    }
+  let resp: Response
+  try {
+    resp = await fetch(apiUrl, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(ticket),
+      signal: controller.signal,
+    })
+  } catch (fetchErr) {
     clearTimeout(timeoutId)
+    const isTimeout = (fetchErr as Error).name === "AbortError"
+    console.error("[api/tickets] Fetch failed:", apiUrl, isTimeout ? "TIMEOUT" : (fetchErr as Error).message)
+    const err = new Error(isTimeout ? "Backend timeout (60s). Check if ALB is reachable from this server." : (fetchErr as Error).message) as Error & { status?: number }
+    err.status = 504
+    throw err
+  }
+  clearTimeout(timeoutId)
 
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => null)
-      const msg = err?.message || err?.error || (typeof err === "string" ? err : JSON.stringify(err)) || `API returned ${resp.status}`
-      const errWithStatus = new Error(msg) as Error & { status?: number; body?: unknown }
-      errWithStatus.status = resp.status
-      errWithStatus.body = err
-      throw errWithStatus
-    }
-
-    return (await resp.json()) as Ticket
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => null)
+    const msg = err?.message || err?.error || (typeof err === "string" ? err : JSON.stringify(err)) || `API returned ${resp.status}`
+    const errWithStatus = new Error(msg) as Error & { status?: number; body?: unknown }
+    errWithStatus.status = resp.status
+    errWithStatus.body = err
+    throw errWithStatus
   }
 
-  return {
-    id: Math.random().toString(16).slice(2),
-    createdAt: new Date().toISOString(),
-    ...ticket,
-  }
+  return (await resp.json()) as Ticket
 }
 
 async function fetchTickets(token?: string): Promise<Ticket[]> {
-  const baseUrl = process.env.TICKETS_BACKEND_URL || process.env.NEXT_PUBLIC_API_BASE_URL || process.env.TICKET_SERVICE_URL
-  const apiUrl = baseUrl ? `${baseUrl.replace(/\/+$/, "")}/v1/tickets` : null
-
-  if (!apiUrl) {
-    return []
-  }
+  const baseUrl = config.ticketsBackendUrl
+  const apiUrl = `${baseUrl.replace(/\/+$/, "")}/v1/tickets`
 
   const headers: Record<string, string> = {}
   if (token) headers.Authorization = token
